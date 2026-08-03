@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- CSP: Política de Seguridad -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval';">
+    <title>Sistema de Pedidos Pro</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c' },
+                        surface: '#FCFCFC',
+                        surface2: '#F3F4F6'
+                    },
+                    boxShadow: {
+                        'premium': '0 10px 40px -10px rgba(0,0,0,0.08)',
+                        'floating': '0 20px 40px -15px rgba(0,0,0,0.15)',
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.05)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root { -webkit-tap-highlight-color: transparent; }
+        body { background-color: #F9FAFB; color: #171717; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+        
+        /* Contenedor Web Responsivo (Eliminando el límite de celular) */
+        .app-container { 
+            width: 100%; 
+            margin: 0 auto; 
+            background-color: transparent; 
+            min-height: 100vh; 
+            position: relative; 
+            overflow-x: hidden;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Animaciones UI Expertas */
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .slide-up { animation: slideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .scale-in { animation: scaleIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        /* Efecto Glass */
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .glass-dark { background: rgba(23, 23, 23, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+
+        /* Componentes Custom */
+        .btn-fluid { transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s; }
+        .btn-fluid:active { transform: scale(0.96); }
+        
+        .pill-tab { transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .pill-tab.active { background-color: #171717; color: white; border-color: #171717; }
+        
+        /* Admin Dark Theme */
+        .saas-theme { background-color: #0A0A0A; color: #FAFAFA; }
+        .saas-card { background: #121212; border: 1px solid rgba(255,255,255,0.08); transition: border-color 0.3s; }
+        .saas-card:hover { border-color: rgba(255,255,255,0.15); }
+    </style>
+</head>
+<body class="selection:bg-brand-100 selection:text-brand-600">
+
+    <div id="client-view" class="app-container">
+        
+        <!-- Header Minimalista Responsivo -->
+        <header id="client-header" class="glass sticky top-0 z-40 px-6 py-5 flex justify-between items-center transition-all border-b border-neutral-100">
+            <div class="flex items-center gap-3 max-w-7xl mx-auto w-full justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-900 shadow-inner">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mb-0.5">Entregar en</p>
+                        <div class="flex items-center gap-2 cursor-pointer group">
+                            <span class="font-extrabold text-sm text-neutral-900 group-hover:text-brand-500 transition-colors" id="header-location-text">Mesa / Local</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-neutral-400"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-neutral-100 rounded-full p-1 flex">
+                    <button onclick="setOrderMode('mesa')" id="btn-mode-mesa" class="px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-neutral-900 shadow-sm transition-all z-10">Mesa</button>
+                    <button onclick="setOrderMode('domicilio')" id="btn-mode-domicilio" class="px-4 py-1.5 rounded-full text-[11px] font-bold text-neutral-500 transition-all z-10 hover:text-neutral-900">Delivery</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Menu / Tienda -->
+        <main id="view-menu" class="fade-in pb-32">
+            <!-- Categorías Flotantes -->
+            <div class="px-6 py-4 sticky top-[72px] bg-[#F9FAFB]/95 backdrop-blur-md z-30 mb-2 border-b border-neutral-100/50">
+                <div id="category-tabs" class="flex gap-2.5 overflow-x-auto no-scrollbar py-1 max-w-7xl mx-auto md:justify-center">
+                    <!-- JS Inyecta las categorías -->
+                </div>
+            </div>
+
+            <!-- Grid Responsivo para Platos -->
+            <div class="px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 max-w-7xl mx-auto mt-6" id="menu-items-container">
+                <!-- JS Inyecta los productos -->
+            </div>
+        </main>
+
+        <main id="view-checkout" class="hidden fade-in px-6 py-10 pb-32 bg-transparent min-h-full max-w-3xl mx-auto">
+            <div class="flex items-center gap-4 mb-8">
+                <button onclick="openMenu()" class="w-10 h-10 bg-neutral-100 hover:bg-neutral-200 rounded-full flex items-center justify-center text-neutral-900 transition-colors btn-fluid">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <h2 class="text-3xl font-black text-neutral-900 tracking-tight">Tu Orden</h2>
+            </div>
+            
+            <!-- Items Carrito -->
+            <div id="cart-items" class="mb-8 flex flex-col gap-4">
+                <!-- JS inyecta items -->
+            </div>
+
+            <!-- Resumen Pago -->
+            <div class="bg-neutral-50 p-6 rounded-[24px] mb-8 border border-neutral-100/80">
+                <div class="flex justify-between mb-3 text-sm font-medium text-neutral-500"><span>Subtotal</span><span id="checkout-subtotal" class="text-neutral-900">$0</span></div>
+                <div class="flex justify-between mb-4 text-sm font-medium text-neutral-500"><span>Costo de Envío</span><span id="checkout-shipping" class="text-neutral-900">Gratis</span></div>
+                <div class="w-full h-px bg-neutral-200 mb-4"></div>
+                <div class="flex justify-between font-black text-xl">
+                    <span class="text-neutral-900">Total</span><span id="checkout-total" class="text-brand-500">$0</span>
+                </div>
+            </div>
+
+            <!-- Formulario Datos -->
+            <form id="checkout-form" class="space-y-4" onsubmit="openWompiModal(event)">
+                <h3 class="font-extrabold text-neutral-900 text-lg mb-2">Detalles de entrega</h3>
+                <div class="space-y-3">
+                    <input type="text" id="cust-name" required placeholder="Tu Nombre Completo" class="w-full bg-neutral-50 border border-neutral-200 p-4 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-sm font-medium">
+                    <input type="tel" id="cust-phone" required placeholder="WhatsApp (Ej: 300 123 4567)" class="w-full bg-neutral-50 border border-neutral-200 p-4 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-sm font-medium">
+                    <div id="dynamic-location-input">
+                        <input type="text" id="cust-location" required placeholder="Número de Mesa" class="w-full bg-neutral-50 border border-neutral-200 p-4 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-sm font-medium">
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-neutral-900 text-white py-4.5 p-4 rounded-2xl font-bold flex justify-center items-center gap-2 mt-8 btn-fluid">
+                    Pagar con <span class="font-black tracking-tighter text-lg ml-1">Wompi</span>
+                </button>
+            </form>
+        </main>
+
+        <main id="view-tracking" class="hidden fade-in px-6 py-12 bg-transparent min-h-full max-w-3xl mx-auto">
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 text-green-600 rounded-full mb-6 shadow-sm">
+                    <i class="fa-solid fa-check text-4xl"></i>
+                </div>
+                <h2 class="text-3xl font-black mb-1 text-neutral-900 tracking-tight">¡Orden Confirmada!</h2>
+                <p class="text-neutral-500 text-sm font-medium">Ticket #<span id="track-order-id" class="font-bold text-neutral-900"></span></p>
+            </div>
+
+            <!-- Mapa Minimalista -->
+            <div id="live-map-container" class="hidden w-full h-48 rounded-[24px] bg-neutral-50 relative border border-neutral-200 mb-8 overflow-hidden">
+                <svg class="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 350 150" preserveAspectRatio="none">
+                    <path d="M-20,100 C 100,100 150,20 250,50 S 350,120 400,100" fill="none" stroke="#171717" stroke-width="2" stroke-dasharray="4,4" stroke-linecap="round" />
+                </svg>
+                <div id="gps-bike" class="absolute w-12 h-12 bg-neutral-900 rounded-full shadow-lg flex items-center justify-center text-xl text-white z-10 transition-all duration-1000 ease-in-out border-4 border-white" style="left: 10px; top: 70px;">
+                    <i class="fa-solid fa-motorcycle text-sm"></i>
+                </div>
+                <div class="absolute left-4 top-16 w-8 h-8 bg-neutral-200 text-neutral-600 rounded-full flex items-center justify-center z-0 border-2 border-white">
+                    <i class="fa-solid fa-store text-[10px]"></i>
+                </div>
+                <div class="absolute right-4 top-16 w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center z-0 border-2 border-white shadow-md">
+                    <i class="fa-solid fa-house text-[10px]"></i>
+                </div>
+                
+                <button onclick="toggleChat()" class="absolute bottom-3 right-3 bg-white/90 backdrop-blur text-neutral-900 px-4 py-2 rounded-full font-bold shadow-sm text-xs flex items-center gap-2 border border-neutral-200 hover:bg-neutral-50 btn-fluid">
+                    <i class="fa-solid fa-message text-brand-500"></i> Repartidor
+                </button>
+            </div>
+
+            <!-- Timeline Elegante -->
+            <div class="bg-white p-6 rounded-[24px] border border-neutral-100 shadow-premium">
+                <h3 class="font-bold text-lg mb-6 text-neutral-900">Estado del envío</h3>
+                
+                <div class="relative pl-6 border-l-2 border-neutral-100 space-y-8" id="tracking-timeline">
+                    <div class="relative" id="step-pending">
+                        <div class="absolute -left-[35px] w-4 h-4 bg-white border-4 border-brand-500 rounded-full"></div>
+                        <p class="font-extrabold text-neutral-900 text-sm">Pendiente de Confirmación</p>
+                        <p class="text-[13px] text-neutral-500 mt-0.5">El restaurante está verificando tu pago.</p>
+                    </div>
+                    <div class="relative opacity-40" id="step-prep">
+                        <div class="absolute -left-[35px] w-4 h-4 bg-neutral-200 rounded-full"></div>
+                        <p class="font-extrabold text-neutral-900 text-sm">En Preparación</p>
+                        <p class="text-[13px] text-neutral-500 mt-0.5">Nuestros chefs están trabajando.</p>
+                    </div>
+                    <div class="relative opacity-40" id="step-ready">
+                        <div class="absolute -left-[35px] w-4 h-4 bg-neutral-200 rounded-full"></div>
+                        <p class="font-extrabold text-neutral-900 text-sm" id="track-step3-title">Despachado</p>
+                        <p class="text-[13px] text-neutral-500 mt-0.5" id="track-step3-desc">¡Va en camino!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="startNewOrder()" class="mt-8 w-full bg-neutral-100 text-neutral-900 font-bold py-4 rounded-2xl hover:bg-neutral-200 transition-colors btn-fluid">
+                Hacer otro pedido
+            </button>
+        </main>
+
+        <!-- Floating Bottom Bar -->
+        <div id="client-bottom-nav" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] max-w-[380px] glass-dark text-white rounded-full p-2 pl-6 flex justify-between items-center z-50 shadow-floating scale-in hidden">
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <i class="fa-solid fa-basket-shopping text-neutral-400"></i>
+                    <span id="cart-badge" class="absolute -top-3 -right-3 bg-brand-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full hidden">0</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Total</span>
+                    <span class="text-sm font-bold text-white leading-none" id="nav-total">$0</span>
+                </div>
+            </div>
+            <button onclick="openCheckout()" class="bg-white text-neutral-900 px-6 py-2.5 rounded-full font-bold text-sm btn-fluid">
+                Ver Orden
+            </button>
+        </div>
+
+        <!-- Botón Acceso Admin -->
+        <button onclick="toggleAppMode()" class="fixed top-24 right-0 bg-neutral-900 text-white px-4 py-2.5 rounded-l-xl z-20 hover:bg-black transition-all flex items-center gap-2 text-[11px] font-bold shadow-floating">
+            <i class="fa-solid fa-terminal text-brand-500"></i> Panel Negocios
+        </button>
+    </div>
+
+    <!-- PANTALLA LOGIN TIPO LANDING PAGE SAAS -->
+    <div id="admin-login-view" class="hidden fixed inset-0 z-[300] bg-white flex fade-in overflow-hidden">
+        
+        <!-- Lado Izquierdo: Ventas y Marketing (Oculto en Móviles) -->
+        <div class="hidden lg:flex lg:w-1/2 bg-neutral-900 p-12 flex-col justify-between relative overflow-hidden">
+            <div class="absolute -top-40 -left-40 w-[500px] h-[500px] bg-brand-500/20 rounded-full blur-[100px]"></div>
+            <div class="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[120px]"></div>
+            
+            <div class="relative z-10 mt-10">
+                <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl text-neutral-900 mb-8 shadow-xl">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <h1 class="text-5xl lg:text-6xl font-black text-white tracking-tight mb-6 leading-tight">RestoOS<br>Commerce.</h1>
+                <p class="text-neutral-400 text-xl font-medium max-w-md leading-relaxed">El sistema de autogestión de pedidos que multiplica las ventas de tu restaurante. Sin comisiones por venta.</p>
+            </div>
+            
+            <div class="relative z-10 bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md max-w-md mt-10">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="flex -space-x-3">
+                        <img src="https://i.pravatar.cc/100?img=33" class="w-10 h-10 rounded-full border-2 border-neutral-900">
+                        <img src="https://i.pravatar.cc/100?img=47" class="w-10 h-10 rounded-full border-2 border-neutral-900">
+                        <img src="https://i.pravatar.cc/100?img=12" class="w-10 h-10 rounded-full border-2 border-neutral-900">
+                    </div>
+                    <div class="text-sm font-bold text-white">Únete a +500 negocios</div>
+                </div>
+                <p class="text-sm text-neutral-400 italic font-medium">"Desde que usamos RestoOS, nuestros pedidos por WhatsApp se gestionan solos y nuestras ventas subieron un 40%."</p>
+            </div>
+        </div>
+
+        <!-- Lado Derecho: Formularios -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative overflow-y-auto bg-surface">
+            <button onclick="closeLogin()" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center rounded-full bg-neutral-100 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-200 transition-colors z-20"><i class="fa-solid fa-times"></i></button>
+            
+            <div class="max-w-[400px] w-full relative z-10 scale-in pt-10 lg:pt-0">
+                
+                <!-- Logo versión Móvil -->
+                <div class="w-12 h-12 bg-neutral-900 rounded-[14px] flex lg:hidden items-center justify-center text-xl text-white mb-6 shadow-md">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <h2 class="text-3xl font-black text-neutral-900 tracking-tight mb-2 lg:hidden">RestoOS.</h2>
+                
+                <div id="auth-forms-container">
+                        <input type="email" id="reg-email" placeholder="Correo electrónico" class="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 rounded-xl focus:border-neutral-900 outline-none text-sm" required>
+                        <input type="text" id="reg-user" placeholder="Usuario (para login)" class="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 rounded-xl focus:border-neutral-900 outline-none text-sm" required>
+                        <input type="password" id="reg-pass" placeholder="Contraseña" class="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 rounded-xl focus:border-neutral-900 outline-none text-sm" required>
+                        
+                        <div class="bg-brand-50 p-3 rounded-xl border border-brand-100 mt-2">
+                            <p class="text-[11px] text-brand-600 font-semibold">🎁 Obtienes 14 días gratis. Luego $50.000 COP/mes.</p>
+                        </div>
+
+                        <button type="submit" class="w-full bg-brand-500 text-white font-bold py-3.5 rounded-xl hover:bg-brand-600 transition-colors btn-fluid mt-4 text-sm">
+                            Comenzar Prueba
+                        </button>
+                    </form>
+                    <button onclick="switchAuthView('login')" class="w-full text-center text-xs font-bold text-neutral-500 mt-6 hover:text-neutral-900">Ya tengo cuenta</button>
+                </div>
+
+                <!-- Recuperar -->
+                <div id="form-recover" class="fade-in hidden">
+                    <p class="text-sm text-neutral-500 mb-6 font-medium">Te enviaremos un enlace mágico.</p>
+                    <form onsubmit="processRecovery(event)" class="space-y-4">
+                        <input type="email" id="rec-email" placeholder="Tu correo electrónico" class="w-full bg-neutral-50 border border-neutral-200 px-4 py-3.5 rounded-2xl focus:border-neutral-900 outline-none text-sm font-medium" required>
+                        
+                        <div id="recover-success" class="hidden bg-green-50 text-green-700 p-3 rounded-xl text-xs font-bold text-center border border-green-100">
+                            Enlace enviado.
+                        </div>
+                        <button type="submit" class="w-full bg-neutral-900 text-white font-bold py-4 rounded-2xl hover:bg-black transition-colors btn-fluid">
+                            Enviar Enlace
+                        </button>
+                    </form>
+                    <button onclick="switchAuthView('login')" class="w-full text-center text-xs font-bold text-neutral-500 mt-6 hover:text-neutral-900">Volver</button>
+                </div>
+            </div>
+
+            <button onclick="closeLogin()" class="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-neutral-100 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-200 transition-colors"><i class="fa-solid fa-times text-sm"></i></button>
+        </div>
+    </div>
+
+    <div id="admin-view" class="hidden min-h-screen bg-surface2 flex text-neutral-900">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white border-r border-neutral-200 flex flex-col z-10 sticky top-0 h-screen">
+            <div class="p-6 border-b border-neutral-100">
+                <div class="w-8 h-8 bg-neutral-900 rounded-lg flex items-center justify-center text-white mb-4 shadow-sm">
+                    <i class="fa-solid fa-store text-xs"></i>
+                </div>
+                <h1 class="text-lg font-black tracking-tight" id="admin-restaurant-name">Restaurante</h1>
+                <p class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mt-1">Workspace</p>
+            </div>
+            
+            <nav class="p-4 flex-1 space-y-1">
+                <button onclick="switchAdminTab('pedidos')" id="tab-admin-pedidos" class="w-full text-left px-4 py-2.5 bg-neutral-100 text-neutral-900 rounded-xl font-bold text-sm transition flex items-center gap-3"><i class="fa-solid fa-inbox w-4 text-center opacity-70"></i> Pedidos</button>
+                <button onclick="switchAdminTab('menu')" id="tab-admin-menu" class="w-full text-left px-4 py-2.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50 rounded-xl font-bold text-sm transition flex items-center gap-3"><i class="fa-solid fa-layer-group w-4 text-center opacity-70"></i> Menú</button>
+                <button onclick="switchAdminTab('billing')" id="tab-admin-billing" class="w-full text-left px-4 py-2.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50 rounded-xl font-bold text-sm transition flex items-center gap-3"><i class="fa-solid fa-credit-card w-4 text-center opacity-70"></i> Suscripción</button>
+            </nav>
+            
+            <div class="p-4 border-t border-neutral-100 space-y-2">
+                <button onclick="toggleAppMode()" class="w-full text-left px-4 py-2 text-neutral-500 hover:text-neutral-900 text-xs font-bold transition flex items-center gap-3"><i class="fa-solid fa-mobile-screen w-4 text-center opacity-70"></i> Ver App</button>
+                <button onclick="logoutAdmin()" class="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg text-xs font-bold transition flex items-center gap-3"><i class="fa-solid fa-power-off w-4 text-center opacity-70"></i> Salir</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-8 h-screen overflow-y-auto">
+            
+            <!-- Dashboard Kanban (Pedidos) -->
+            <div id="admin-content-pedidos" class="fade-in max-w-6xl mx-auto">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-black tracking-tight">Monitor en Vivo</h2>
+                    <p class="text-sm text-neutral-500 font-medium">Gestión de órdenes operativas.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Columna -->
+                    <div class="bg-neutral-100/50 rounded-3xl p-2 border border-neutral-200 border-dashed">
+                        <div class="px-3 py-3 flex justify-between items-center">
+                            <span class="text-xs font-bold uppercase tracking-widest text-neutral-500 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-brand-500"></div> Nuevos</span>
+                        </div>
+                        <div id="col-pending" class="space-y-3 min-h-[200px]"></div>
+                    </div>
+                    
+                    <div class="bg-neutral-100/50 rounded-3xl p-2 border border-neutral-200 border-dashed">
+                        <div class="px-3 py-3 flex justify-between items-center">
+                            <span class="text-xs font-bold uppercase tracking-widest text-neutral-500 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-blue-500"></div> Cocina</span>
+                        </div>
+                        <div id="col-prep" class="space-y-3 min-h-[200px]"></div>
+                    </div>
+                    
+                    <div class="bg-neutral-100/50 rounded-3xl p-2 border border-neutral-200 border-dashed">
+                        <div class="px-3 py-3 flex justify-between items-center">
+                            <span class="text-xs font-bold uppercase tracking-widest text-neutral-500 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div> Listos</span>
+                        </div>
+                        <div id="col-ready" class="space-y-3 min-h-[200px]"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestor de Menú -->
+            <div id="admin-content-menu" class="hidden fade-in max-w-5xl mx-auto">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h2 class="text-2xl font-black tracking-tight">Catálogo</h2>
+                        <p class="text-sm text-neutral-500 font-medium">Administra productos y categorías.</p>
+                    </div>
+                    <button onclick="openProductModal()" class="bg-neutral-900 text-white px-5 py-2.5 rounded-xl font-bold text-sm btn-fluid flex items-center gap-2 shadow-sm"><i class="fa-solid fa-plus text-xs"></i> Crear Producto</button>
+                </div>
+                
+                <div class="bg-white rounded-3xl shadow-premium border border-neutral-100 p-8">
+                    <div class="mb-10">
+                        <h3 class="text-sm font-bold mb-4 text-neutral-900 uppercase tracking-widest">Categorías</h3>
+                        <div id="admin-categories-list" class="flex flex-wrap gap-2"></div>
+                        <div class="mt-4 flex gap-2 max-w-sm">
+                            <input type="text" id="new-category-name" placeholder="Nueva categoría..." class="flex-1 border border-neutral-200 bg-neutral-50 rounded-xl px-4 py-2 text-sm outline-none focus:border-neutral-900 font-medium">
+                            <button onclick="addCategory()" class="bg-neutral-100 text-neutral-900 px-4 py-2 rounded-xl text-sm font-bold hover:bg-neutral-200 transition">Añadir</button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-sm font-bold mb-4 text-neutral-900 uppercase tracking-widest pt-8 border-t border-neutral-100">Productos</h3>
+                        <div id="admin-products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Facturación -->
+            <div id="admin-content-billing" class="hidden fade-in max-w-3xl mx-auto">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-black tracking-tight">Suscripción</h2>
+                    <p class="text-sm text-neutral-500 font-medium">Gestiona el plan de tu negocio.</p>
+                </div>
+                
+                <div class="bg-white rounded-[32px] shadow-premium border border-neutral-100 p-8 flex flex-col md:flex-row gap-8 items-center relative overflow-hidden">
+                    <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-50 rounded-full blur-3xl z-0"></div>
+                    <div class="flex-1 relative z-10">
+                        <span id="sub-badge" class="inline-block bg-green-100 text-green-700 text-[10px] font-black px-2.5 py-1 rounded-md tracking-widest uppercase mb-3 border border-green-200">Plan Pro Activo</span>
+                        <h3 class="text-2xl font-black text-neutral-900">RestoOS Commerce</h3>
+                        <p class="text-neutral-500 text-sm mt-2 font-medium">Pedidos ilimitados, gestión de menú y rastreo en tiempo real.</p>
+                        
+                        <div class="mt-6 flex gap-8">
+                            <div>
+                                <p class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mb-1">Renovación</p>
+                                <p class="font-bold text-neutral-900" id="sub-next-date">15 Nov, 2026</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mb-1">Monto</p>
+                                <p class="font-bold text-neutral-900">$50.000 <span class="text-xs text-neutral-400">COP/mes</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-auto relative z-10">
+                        <button onclick="paySubscription()" class="w-full bg-neutral-900 text-white font-bold py-3.5 px-8 rounded-2xl hover:bg-black transition-colors btn-fluid shadow-lg text-sm">
+                            Pagar Mensualidad
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="super-admin-view" class="hidden min-h-screen saas-theme flex">
+        <aside class="w-64 border-r border-white/10 flex flex-col z-10 bg-[#0A0A0A]">
+            <div class="p-6">
+                <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-black mb-4 shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                    <i class="fa-solid fa-code text-xs"></i>
+                </div>
+                <h1 class="text-lg font-black tracking-tight text-white">SaaS Master</h1>
+            </div>
+            
+            <nav class="p-4 flex-1 space-y-1">
+                <button class="w-full text-left px-4 py-2.5 bg-white/10 text-white rounded-xl font-bold text-sm flex items-center gap-3 border border-white/5"><i class="fa-solid fa-chart-pie w-4 text-center opacity-70"></i> Overview</button>
+                <button class="w-full text-left px-4 py-2.5 text-neutral-500 hover:text-white rounded-xl font-bold text-sm transition flex items-center gap-3"><i class="fa-solid fa-users w-4 text-center opacity-70"></i> Clientes</button>
+            </nav>
+            
+            <div class="p-4 border-t border-white/10">
+                <button onclick="logoutAdmin()" class="w-full text-left px-4 py-2 text-neutral-500 hover:text-white text-xs font-bold transition flex items-center gap-3"><i class="fa-solid fa-power-off w-4 text-center opacity-70"></i> Cerrar Panel</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 p-10 h-screen overflow-y-auto relative">
+            <div class="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 blur-[120px] rounded-full pointer-events-none"></div>
+
+            <div class="mb-10 relative z-10 flex justify-between items-end">
+                <div>
+                    <h2 class="text-3xl font-black tracking-tight text-white">Overview</h2>
+                    <p class="text-neutral-400 text-sm mt-1 font-medium">Métricas de ingresos y salud del software.</p>
+                </div>
+                <span class="bg-green-500/10 text-green-400 border border-green-500/20 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest flex items-center gap-2"><div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div> Sistema Online</span>
+            </div>
+            
+            <!-- KPIs -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 relative z-10">
+                <div class="saas-card p-6 rounded-3xl">
+                    <p class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Ingresos MRR</p>
+                    <h3 class="text-3xl font-black text-white">$1.5M <span class="text-sm font-medium text-neutral-600">COP</span></h3>
+                    <p class="text-xs text-green-400 mt-2 font-bold">+12% este mes</p>
+                </div>
+                <div class="saas-card p-6 rounded-3xl">
+                    <p class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Clientes Activos</p>
+                    <h3 class="text-3xl font-black text-white" id="saas-active-count">0</h3>
+                </div>
+                <div class="saas-card p-6 rounded-3xl">
+                    <p class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Suspendidos</p>
+                    <h3 class="text-3xl font-black text-white" id="saas-suspended-count">0</h3>
+                </div>
+            </div>
+
+            <!-- Tabla SaaS -->
+            <div class="saas-card rounded-3xl overflow-hidden relative z-10">
+                <div class="p-6 border-b border-white/5">
+                    <h3 class="text-sm font-bold text-white uppercase tracking-widest">Directorio de Negocios</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-white/5 text-[10px] uppercase tracking-widest text-neutral-500 font-bold bg-white/[0.02]">
+                                <th class="px-6 py-4">Negocio</th>
+                                <th class="px-6 py-4">Plan</th>
+                                <th class="px-6 py-4">Estado</th>
+                                <th class="px-6 py-4 text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="saas-restaurants-table" class="divide-y divide-white/5"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Producto -->
+    <div id="product-modal" class="fixed inset-0 z-[400] hidden flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm fade-in">
+        <div class="bg-white rounded-3xl shadow-floating max-w-sm w-full p-6 slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-black text-xl text-neutral-900" id="product-modal-title">Añadir</h3>
+                <button onclick="closeProductModal()" class="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center text-neutral-500 hover:text-neutral-900 transition"><i class="fa-solid fa-times text-sm"></i></button>
+            </div>
+            <div class="space-y-4">
+                <input type="hidden" id="prod-id">
+                <div><input type="text" id="prod-name" placeholder="Nombre del Plato" class="w-full border border-neutral-200 bg-neutral-50 rounded-xl p-3 outline-none focus:border-neutral-900 text-sm font-medium"></div>
+                <div><select id="prod-category" class="w-full border border-neutral-200 bg-neutral-50 rounded-xl p-3 outline-none focus:border-neutral-900 text-sm font-medium"></select></div>
+                <div><input type="number" id="prod-price" placeholder="Precio ($)" class="w-full border border-neutral-200 bg-neutral-50 rounded-xl p-3 outline-none focus:border-neutral-900 text-sm font-medium"></div>
+                <div><input type="text" id="prod-img" placeholder="URL Foto" class="w-full border border-neutral-200 bg-neutral-50 rounded-xl p-3 outline-none focus:border-neutral-900 text-sm font-medium"></div>
+                <div><textarea id="prod-desc" rows="2" placeholder="Descripción" class="w-full border border-neutral-200 bg-neutral-50 rounded-xl p-3 outline-none focus:border-neutral-900 text-sm font-medium"></textarea></div>
+                <button onclick="saveProduct()" class="w-full bg-neutral-900 text-white font-bold py-3.5 rounded-xl btn-fluid mt-2 text-sm">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Alerta -->
+    <div id="general-modal" class="fixed inset-0 z-[500] hidden flex items-center justify-center p-4 bg-neutral-900/40 backdrop-blur-sm fade-in">
+        <div class="bg-white rounded-3xl shadow-floating max-w-[300px] w-full p-6 text-center scale-in">
+            <div id="modal-icon-container" class="w-16 h-16 rounded-full flex items-center justify-center text-2xl mx-auto mb-4"><i id="modal-icon"></i></div>
+            <h3 id="modal-title" class="text-xl font-black mb-1 text-neutral-900 tracking-tight"></h3>
+            <p id="modal-text" class="text-neutral-500 text-sm mb-6 font-medium"></p>
+            <button onclick="closeModal()" class="w-full bg-neutral-100 text-neutral-900 font-bold py-3 rounded-xl hover:bg-neutral-200 transition text-sm">Cerrar</button>
+        </div>
+    </div>
+    
+    <!-- Modal Wompi -->
+    <div id="wompi-modal" class="fixed inset-0 z-[600] hidden flex items-center justify-center p-4 fade-in">
+        <div class="bg-white rounded-3xl shadow-floating max-w-sm w-full overflow-hidden slide-up border border-neutral-100">
+            <div class="bg-neutral-900 p-5 flex justify-between items-center text-white">
+                <span class="font-black tracking-tighter text-xl">Wompi.</span>
+                <span class="text-xs font-bold bg-white/10 px-3 py-1.5 rounded-lg border border-white/10" id="wompi-amount">$0</span>
+            </div>
+            <div class="p-6">
+                <div class="flex gap-2 mb-4 bg-neutral-100 p-1 rounded-xl">
+                    <div class="flex-1 bg-white shadow-sm p-2 text-center rounded-lg font-bold text-[11px] text-neutral-900">Tarjeta</div>
+                    <div class="flex-1 p-2 text-center rounded-lg text-neutral-500 font-bold text-[11px]">Nequi</div>
+                    <div class="flex-1 p-2 text-center rounded-lg text-neutral-500 font-bold text-[11px]">PSE</div>
+                </div>
+                <input type="text" value="4111 1111 1111 1111" class="w-full bg-neutral-50 border border-neutral-200 p-3.5 rounded-xl mb-3 text-sm outline-none font-mono font-medium text-neutral-700">
+                <div class="flex gap-3 mb-6">
+                    <input type="text" value="12/28" class="w-1/2 bg-neutral-50 border border-neutral-200 p-3.5 rounded-xl text-sm outline-none font-mono font-medium text-neutral-700">
+                    <input type="text" value="123" class="w-1/2 bg-neutral-50 border border-neutral-200 p-3.5 rounded-xl text-sm outline-none font-mono font-medium text-neutral-700">
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="document.getElementById('wompi-modal').classList.add('hidden')" class="w-1/3 bg-neutral-100 text-neutral-600 font-bold py-3.5 rounded-xl hover:bg-neutral-200 transition text-sm">Cancelar</button>
+                    <button id="btn-process-wompi" onclick="processWompiPayment()" class="w-2/3 bg-brand-500 text-white font-bold py-3.5 rounded-xl hover:bg-brand-600 transition flex justify-center items-center gap-2 text-sm">
+                        Pagar Ahora <i class="fa-solid fa-lock text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Flotante -->
+    <div id="delivery-chat" class="fixed bottom-0 left-0 right-0 md:left-1/2 md:-ml-[215px] md:w-[430px] h-[60vh] bg-surface z-[150] shadow-floating rounded-t-[32px] transform translate-y-full transition-transform duration-300 ease-in-out border border-neutral-200 flex flex-col">
+        <div class="bg-white px-6 py-4 rounded-t-[32px] flex justify-between items-center cursor-pointer border-b border-neutral-100" onclick="toggleChat()">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-neutral-200 rounded-full overflow-hidden"><img src="https://i.pravatar.cc/100?img=11" class="w-full h-full object-cover"></div>
+                <div>
+                    <h4 class="font-extrabold text-sm text-neutral-900">Carlos</h4>
+                    <p class="text-[10px] text-green-500 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Repartidor</p>
+                </div>
+            </div>
+            <i class="fa-solid fa-chevron-down text-neutral-400"></i>
+        </div>
+        <div class="flex-1 p-6 overflow-y-auto flex flex-col gap-3" id="chat-messages">
+            <div class="self-start max-w-[80%] bg-neutral-100 text-neutral-800 rounded-2xl rounded-tl-sm px-4 py-3 text-sm font-medium">¡Hola! Llego en 10 min 🛵</div>
+        </div>
+        <div class="p-4 bg-white border-t border-neutral-100 flex gap-2">
+            <input type="text" id="chat-input" placeholder="Mensaje..." onkeypress="if(event.key === 'Enter') sendMessage()" class="flex-1 bg-neutral-50 rounded-full px-5 py-2.5 text-sm outline-none focus:bg-neutral-100 transition-colors">
+            <button onclick="sendMessage()" class="w-10 h-10 bg-neutral-900 text-white rounded-full flex items-center justify-center btn-fluid"><i class="fa-solid fa-arrow-up text-sm"></i></button>
+        </div>
+    </div>
+
+    <script>
+        // Utilidades de Seguridad (Anti XSS & Hashing sim.)
+        function sanitizeHTML(str) { return str ? str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)) : ''; }
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Modales
+        function showModal(title, text, iconClass, iconBgClass) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-text').textContent = text;
+            const iconContainer = document.getElementById('modal-icon-container');
+            iconContainer.className = `w-14 h-14 rounded-full flex items-center justify-center text-xl mx-auto mb-4 ${iconBgClass}`;
+            document.getElementById('modal-icon').className = iconClass;
+            document.getElementById('general-modal').classList.remove('hidden');
+        }
+        function closeModal() { document.getElementById('general-modal').classList.add('hidden'); }
+
+        // Estado Global (DB Mock)
+        let saasRestaurants = [
+            { id: 'r1', name: 'Burger Pro', user: 'admin', status: 'active', plan: 'Pro', mrr: 50000, joined: 'Hoy' },
+            { id: 'r2', name: 'Pizza Roma', user: 'pizzaroma', status: 'suspended', plan: 'Pro', mrr: 50000, joined: 'Ayer' }
+        ];
+
+        let dbCategories = [{ id: 'cat_1', name: 'Combos' }, { id: 'cat_2', name: 'Bebidas' }];
+        let dbMenu = [
+            { id: 'p_1', categoryId: 'cat_1', name: 'Smash Burger Doble', desc: 'Doble carne, queso cheddar fundido y pan brioche.', price: 25000, img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80' },
+            { id: 'p_2', categoryId: 'cat_1', name: 'Crispy Chicken', desc: 'Pollo frito extracrujiente con salsa secreta.', price: 22000, img: 'https://images.unsplash.com/photo-1606755962773-d324e0a13086?auto=format&fit=crop&w=300&q=80' },
+            { id: 'p_3', categoryId: 'cat_2', name: 'Limonada Cereza', desc: 'Refrescante limonada natural con cereza.', price: 6000, img: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=300&q=80' }
+        ];
+
+        let cart = JSON.parse(localStorage.getItem('resto_pro_cart')) || [];
+        let globalOrders = []; 
+        let currentOrderId = null;
+        let loggedInRole = null; 
+        
+        let appState = { viewMode: 'client', orderMode: 'mesa', wompiMode: 'order' };
+        let clientCurrentCategory = 'all';
+
+        function renderClientMenu() {
+            const tabs = document.getElementById('category-tabs');
+            tabs.innerHTML = `<button onclick="setCategory('all')" class="px-6 py-2.5 rounded-full text-xs font-bold whitespace-nowrap border pill-tab ${clientCurrentCategory === 'all' ? 'active shadow-md' : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'}">Todo</button>`;
+            
+            dbCategories.forEach(cat => {
+                const isActive = clientCurrentCategory === cat.id;
+                tabs.innerHTML += `<button onclick="setCategory('${cat.id}')" class="px-6 py-2.5 rounded-full text-xs font-bold whitespace-nowrap border pill-tab ${isActive ? 'active shadow-md' : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'}">${cat.name}</button>`;
+            });
+
+            const container = document.getElementById('menu-items-container');
+            container.innerHTML = '';
+            
+            const filteredMenu = clientCurrentCategory === 'all' ? dbMenu : dbMenu.filter(p => p.categoryId === clientCurrentCategory);
+            
+            filteredMenu.forEach(item => {
+                const imgSrc = item.img || `https://placehold.co/300x300/f3f4f6/9ca3af?text=No+Foto`;
+                // Adaptado visualmente para Desktop y Móvil (Estilo Tarjeta)
+                container.innerHTML += `
+                    <div class="flex gap-4 group bg-white p-4 rounded-3xl shadow-sm border border-neutral-100/80 hover:shadow-premium transition-all duration-300 hover:border-neutral-200">
+                        <div class="flex-1 flex flex-col justify-center py-1">
+                            <h3 class="font-extrabold text-neutral-900 text-lg leading-tight mb-1 group-hover:text-brand-600 transition-colors">${item.name}</h3>
+                            <p class="text-[13px] text-neutral-500 font-medium line-clamp-2 mb-3 leading-relaxed">${item.desc}</p>
+                            <div class="flex justify-between items-center mt-auto">
+                                <span class="font-black text-neutral-900 text-lg">$${item.price.toLocaleString('es-CO')}</span>
+                            </div>
+                        </div>
+                        <div class="relative w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] shrink-0">
+                            <img src="${imgSrc}" class="w-full h-full object-cover rounded-[22px] shadow-sm">
+                            <button onclick="addToCart('${item.id}')" class="absolute -bottom-2 -right-2 bg-neutral-900 text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center btn-fluid border-[3px] border-white hover:bg-brand-500 transition-colors">
+                                <i class="fa-solid fa-plus text-sm"></i>
+                            </button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function setCategory(id) { clientCurrentCategory = id; renderClientMenu(); }
+        
+        function setOrderMode(mode) {
+            appState.orderMode = mode;
+            const btnMesa = document.getElementById('btn-mode-mesa');
+            const btnDom = document.getElementById('btn-mode-domicilio');
+            const inputLoc = document.getElementById('dynamic-location-input');
+            const headerText = document.getElementById('header-location-text');
+            
+            if(mode === 'mesa') {
+                btnMesa.className = "px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-neutral-900 shadow-sm transition-all z-10";
+                btnDom.className = "px-4 py-1.5 rounded-full text-[11px] font-bold text-neutral-500 transition-all z-10 hover:text-neutral-900";
+                headerText.textContent = "Mesa / Local";
+                inputLoc.innerHTML = `<input type="text" id="cust-location" required placeholder="Número de Mesa" class="w-full bg-neutral-50 border border-neutral-200 p-4 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-sm font-medium">`;
+            } else {
+                btnDom.className = "px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-neutral-900 shadow-sm transition-all z-10";
+                btnMesa.className = "px-4 py-1.5 rounded-full text-[11px] font-bold text-neutral-500 transition-all z-10 hover:text-neutral-900";
+                headerText.textContent = "Domicilio";
+                inputLoc.innerHTML = `<input type="text" id="cust-location" required placeholder="Dirección Completa" class="w-full bg-neutral-50 border border-neutral-200 p-4 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-sm font-medium">`;
+            }
+            updateCartUI();
+        }
+
+        function addToCart(id) {
+            const product = dbMenu.find(p => p.id === id);
+            if(!product) return;
+            const existing = cart.find(item => item.id === id);
+            if(existing) existing.qty += 1; else cart.push({ ...product, qty: 1 });
+            localStorage.setItem('resto_pro_cart', JSON.stringify(cart));
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const badge = document.getElementById('cart-badge');
+            const nav = document.getElementById('client-bottom-nav');
+            const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+            
+            if(totalItems > 0 && appState.viewMode === 'client' && document.getElementById('view-menu').classList.contains('hidden') === false) { 
+                badge.textContent = totalItems; badge.classList.remove('hidden'); 
+                nav.classList.remove('hidden');
+            } else { 
+                badge.classList.add('hidden'); nav.classList.add('hidden');
+            }
+
+            let subtotal = 0;
+            const cartContainer = document.getElementById('cart-items');
+            if(cartContainer) {
+                cartContainer.innerHTML = '';
+                cart.forEach(item => {
+                    const lineTotal = Math.max(0, item.price) * Math.max(1, item.qty);
+                    subtotal += lineTotal;
+                    cartContainer.innerHTML += `
+                        <div class="flex items-center justify-between border-b border-neutral-100 pb-3">
+                            <div class="flex items-center gap-3">
+                                <span class="bg-neutral-100 text-neutral-600 text-[11px] font-black px-2 py-1 rounded-md">${item.qty}x</span>
+                                <span class="font-extrabold text-sm text-neutral-900">${item.name}</span>
+                            </div>
+                            <div class="font-black text-neutral-900 text-sm">$${lineTotal.toLocaleString('es-CO')}</div>
+                        </div>`;
+                });
+            }
+
+            const shipping = appState.orderMode === 'domicilio' ? 5000 : 0;
+            const finalTotal = subtotal + shipping;
+            
+            document.getElementById('nav-total').textContent = `$${subtotal.toLocaleString('es-CO')}`;
+            if(document.getElementById('checkout-subtotal')) {
+                document.getElementById('checkout-subtotal').textContent = `$${subtotal.toLocaleString('es-CO')}`;
+                document.getElementById('checkout-shipping').textContent = shipping > 0 ? `$${shipping.toLocaleString('es-CO')}` : 'Gratis';
+                document.getElementById('checkout-total').textContent = `$${finalTotal.toLocaleString('es-CO')}`;
+                document.getElementById('wompi-amount').textContent = `$${finalTotal.toLocaleString('es-CO')}`;
+            }
+        }
+
+        function openCheckout() {
+            document.getElementById('view-menu').classList.add('hidden');
+            document.getElementById('client-bottom-nav').classList.add('hidden');
+            document.getElementById('view-checkout').classList.remove('hidden');
+        }
+        function openMenu() {
+            document.getElementById('view-checkout').classList.add('hidden');
+            document.getElementById('view-menu').classList.remove('hidden');
+            updateCartUI();
+        }
+
+        function openWompiModal(e) {
+            e.preventDefault();
+            if(!document.getElementById('cust-name').value || !document.getElementById('cust-location').value) return;
+            appState.wompiMode = 'order';
+            document.getElementById('wompi-modal').classList.remove('hidden');
+        }
+
+        function processWompiPayment() {
+            const btn = document.getElementById('btn-process-wompi');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-white"></i>'; btn.disabled = true;
+
+            setTimeout(() => {
+                document.getElementById('wompi-modal').classList.add('hidden');
+                btn.innerHTML = 'Pagar Ahora <i class="fa-solid fa-lock text-[10px]"></i>'; btn.disabled = false;
+                if(appState.wompiMode === 'order') submitOrderAfterPayment();
+                else if(appState.wompiMode === 'subscription') successSubscriptionPayment();
+            }, 1500);
+        }
+
+        function submitOrderAfterPayment() {
+            const name = sanitizeHTML(document.getElementById('cust-name').value);
+            const phone = sanitizeHTML(document.getElementById('cust-phone').value);
+            const location = sanitizeHTML(document.getElementById('cust-location').value);
+            const subtotal = cart.reduce((sum, item) => sum + (Math.max(0, item.price) * Math.max(1, item.qty)), 0);
+            const total = appState.orderMode === 'domicilio' ? subtotal + 5000 : subtotal;
+
+            const newOrder = { id: Math.floor(1000 + Math.random() * 9000).toString(), mode: appState.orderMode, customer: name, location: location, items: [...cart], total: total, status: 'pending' };
+            globalOrders.push(newOrder); currentOrderId = newOrder.id;
+            
+            cart = []; localStorage.removeItem('resto_pro_cart'); updateCartUI();
+            
+            document.getElementById('view-checkout').classList.add('hidden');
+            document.getElementById('client-header').classList.add('hidden');
+            document.getElementById('view-tracking').classList.remove('hidden');
+            
+            updateClientTrackingUI(); renderAdminDashboard(); 
+        }
+
+        function updateClientTrackingUI() {
+            if(!currentOrderId) return;
+            const order = globalOrders.find(o => o.id === currentOrderId);
+            if(!order) return;
+
+            document.getElementById('track-order-id').textContent = order.id;
+            const sPending = document.getElementById('step-pending');
+            const sPrep = document.getElementById('step-prep');
+            const sReady = document.getElementById('step-ready');
+
+            [sPending, sPrep, sReady].forEach(el => { el.classList.add('opacity-40'); el.querySelector('div').className = "absolute -left-[35px] w-4 h-4 bg-neutral-200 rounded-full"; });
+            
+            const activeClass = "absolute -left-[35px] w-4 h-4 bg-white border-4 border-brand-500 rounded-full";
+            const doneClass = "absolute -left-[35px] w-4 h-4 bg-brand-500 rounded-full";
+
+            if(order.status === 'pending') { sPending.classList.remove('opacity-40'); sPending.querySelector('div').className = activeClass; } 
+            else if (order.status === 'prep') {
+                sPending.classList.remove('opacity-40'); sPending.querySelector('div').className = doneClass;
+                sPrep.classList.remove('opacity-40'); sPrep.querySelector('div').className = activeClass;
+            } else if (order.status === 'ready') {
+                sPending.classList.remove('opacity-40'); sPending.querySelector('div').className = doneClass;
+                sPrep.classList.remove('opacity-40'); sPrep.querySelector('div').className = doneClass;
+                sReady.classList.remove('opacity-40'); sReady.querySelector('div').className = activeClass;
+                document.getElementById('track-step3-title').textContent = order.mode === 'domicilio' ? 'En Camino' : 'Listo en Barra';
+                if(order.mode === 'domicilio') document.getElementById('live-map-container').classList.remove('hidden');
+            }
+        }
+
+        function toggleChat() {
+            const chat = document.getElementById('delivery-chat');
+            chat.classList.toggle('translate-y-full');
+        }
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const safeMsg = sanitizeHTML(input.value.trim());
+            if(!safeMsg) return;
+            const chatBox = document.getElementById('chat-messages');
+            chatBox.innerHTML += `<div class="self-end max-w-[80%] bg-brand-500 text-white rounded-2xl rounded-tr-sm px-4 py-3 text-sm font-medium fade-in">${safeMsg}</div>`;
+            input.value = ''; setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 10);
+        }
+        function startNewOrder() {
+            document.getElementById('view-tracking').classList.add('hidden');
+            document.getElementById('live-map-container').classList.add('hidden');
+            document.getElementById('client-header').classList.remove('hidden');
+            document.getElementById('view-menu').classList.remove('hidden');
+            currentOrderId = null; updateCartUI();
+        }
+
+        function toggleAppMode() {
+            if(appState.viewMode === 'client') {
+                if(loggedInRole === 'admin') {
+                    appState.viewMode = 'admin'; document.getElementById('client-view').classList.add('hidden'); document.getElementById('admin-view').classList.remove('hidden'); renderAdminDashboard();
+                } else if (loggedInRole === 'superadmin') {
+                    appState.viewMode = 'superadmin'; document.getElementById('client-view').classList.add('hidden'); document.getElementById('super-admin-view').classList.remove('hidden'); renderSuperAdminDashboard();
+                } else {
+                    document.getElementById('admin-login-view').classList.remove('hidden'); switchAuthView('login');
+                }
+            } else {
+                appState.viewMode = 'client'; document.getElementById('admin-view').classList.add('hidden'); document.getElementById('super-admin-view').classList.add('hidden'); document.getElementById('client-view').classList.remove('hidden'); updateCartUI();
+            }
+        }
+
+        function switchAuthView(view) {
+            ['form-login', 'form-register', 'form-recover', 'login-error'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(`form-${view}`).classList.remove('hidden');
+        }
+        function closeLogin() { document.getElementById('admin-login-view').classList.add('hidden'); }
+
+        async function processLogin(e) {
+            e.preventDefault();
+            const user = sanitizeHTML(document.getElementById('login-user').value.toLowerCase());
+            const pass = document.getElementById('login-pass').value;
+            const errorBox = document.getElementById('login-error');
+            const errorText = document.getElementById('login-error-text');
+
+            if(user === 'owner' && pass === 'master') {
+                loggedInRole = 'superadmin'; appState.viewMode = 'superadmin';
+                document.getElementById('admin-login-view').classList.add('hidden'); document.getElementById('client-view').classList.add('hidden');
+                document.getElementById('super-admin-view').classList.remove('hidden'); renderSuperAdminDashboard(); return;
+            }
+
+            const hash1234 = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4";
+            const inputHash = await hashPassword(pass);
+            const restaurant = saasRestaurants.find(r => r.user === user);
+
+            if(restaurant && inputHash === hash1234) {
+                if(restaurant.status === 'suspended') {
+                    errorText.textContent = "Cuenta inactiva (Falta pago)."; errorBox.classList.remove('hidden'); return;
+                }
+                loggedInRole = 'admin'; appState.viewMode = 'admin';
+                document.getElementById('admin-login-view').classList.add('hidden'); document.getElementById('client-view').classList.add('hidden');
+                document.getElementById('admin-restaurant-name').textContent = restaurant.name;
+                document.getElementById('admin-view').classList.remove('hidden');
+                document.getElementById('login-pass').value = ''; switchAdminTab('pedidos');
+            } else {
+                errorText.textContent = "Credenciales inválidas."; errorBox.classList.remove('hidden');
+            }
+        }
+
+        function logoutAdmin() { loggedInRole = null; toggleAppMode(); }
+
+        // Kanban Operativo
+        function switchAdminTab(tab) {
+            ['pedidos', 'menu', 'billing'].forEach(t => {
+                document.getElementById(`admin-content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-admin-${t}`).className = "w-full text-left px-4 py-2.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50 rounded-xl font-bold text-sm transition flex items-center gap-3";
+            });
+            document.getElementById(`admin-content-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-admin-${tab}`).className = "w-full text-left px-4 py-2.5 bg-neutral-100 text-neutral-900 rounded-xl font-bold text-sm transition flex items-center gap-3";
+            
+            if(tab === 'pedidos') renderAdminDashboard();
+            if(tab === 'menu') renderAdminMenuManager();
+        }
+
+        function renderAdminDashboard() {
+            if(loggedInRole !== 'admin') return;
+            ['col-pending', 'col-prep', 'col-ready'].forEach(id => document.getElementById(id).innerHTML = '');
+            
+            globalOrders.forEach(order => {
+                const icon = order.mode === 'domicilio' ? '<i class="fa-solid fa-motorcycle text-brand-500"></i>' : '<i class="fa-solid fa-bell-concierge text-neutral-500"></i>';
+                let actionBtn = '';
+                if(order.status === 'pending') actionBtn = `<button onclick="updateOrderStatus('${order.id}', 'prep')" class="w-full bg-neutral-900 text-white text-xs font-bold py-2 rounded-lg mt-3 hover:bg-black btn-fluid">Preparar</button>`;
+                if(order.status === 'prep') actionBtn = `<button onclick="updateOrderStatus('${order.id}', 'ready')" class="w-full bg-green-500 text-white text-xs font-bold py-2 rounded-lg mt-3 hover:bg-green-600 btn-fluid">Listo / Despachar</button>`;
+                
+                const cardHTML = `
+                    <div class="bg-white p-4 rounded-[16px] shadow-sm border border-neutral-100 relative overflow-hidden group">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[10px] font-black tracking-widest text-neutral-400">#${order.id}</span>
+                            <span class="text-[10px] font-bold text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded flex items-center gap-1">${icon} ${order.mode.toUpperCase()}</span>
+                        </div>
+                        <p class="font-extrabold text-neutral-900 text-sm">${order.customer}</p>
+                        <p class="text-[11px] text-neutral-500 mb-3">${order.location}</p>
+                        <div class="space-y-1">
+                            ${order.items.map(i => `<div class="text-xs text-neutral-600 font-medium"><span class="font-bold text-neutral-900">${i.qty}x</span> ${i.name}</div>`).join('')}
+                        </div>
+                        ${actionBtn}
+                    </div>`;
+
+                if(order.status === 'pending') document.getElementById('col-pending').innerHTML += cardHTML;
+                else if(order.status === 'prep') document.getElementById('col-prep').innerHTML += cardHTML;
+                else if(order.status === 'ready') document.getElementById('col-ready').innerHTML += cardHTML;
+            });
+        }
+        function updateOrderStatus(id, newStatus) {
+            const order = globalOrders.find(o => o.id === id);
+            if(order) { order.status = newStatus; renderAdminDashboard(); if(currentOrderId === id) updateClientTrackingUI(); }
+        }
+
+        // Gestor de Menú
+        function renderAdminMenuManager() {
+            const catContainer = document.getElementById('admin-categories-list'); catContainer.innerHTML = '';
+            const selectCat = document.getElementById('prod-category'); selectCat.innerHTML = '';
+            
+            dbCategories.forEach(cat => {
+                catContainer.innerHTML += `<div class="bg-neutral-100 text-neutral-900 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2">${cat.name} <button onclick="deleteCategory('${cat.id}')" class="text-neutral-400 hover:text-red-500"><i class="fa-solid fa-times"></i></button></div>`;
+                selectCat.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+            });
+
+            const prodGrid = document.getElementById('admin-products-grid'); prodGrid.innerHTML = '';
+            dbMenu.forEach(prod => {
+                const catName = dbCategories.find(c => c.id === prod.categoryId)?.name || 'Sin Categoría';
+                const imgSrc = prod.img || `https://placehold.co/150x150/f3f4f6/9ca3af?text=No+Foto`;
+                prodGrid.innerHTML += `
+                    <div class="bg-white border border-neutral-100 rounded-[20px] overflow-hidden flex flex-col hover:border-neutral-200 transition-colors">
+                        <div class="h-32 w-full relative"><img src="${imgSrc}" class="w-full h-full object-cover">
+                            <div class="absolute top-2 right-2 bg-white/90 backdrop-blur text-neutral-900 text-[9px] font-black px-2 py-0.5 rounded-md">${catName}</div>
+                        </div>
+                        <div class="p-4 flex-1 flex flex-col">
+                            <h4 class="font-extrabold text-sm text-neutral-900">${prod.name}</h4>
+                            <p class="text-brand-500 font-black text-sm my-1">$${Number(prod.price).toLocaleString('es-CO')}</p>
+                            <div class="flex gap-2 mt-auto pt-3 border-t border-neutral-50">
+                                <button onclick="openProductModal('${prod.id}')" class="flex-1 bg-neutral-50 text-neutral-600 py-1.5 rounded-lg text-xs font-bold hover:bg-neutral-100">Editar</button>
+                                <button onclick="deleteProduct('${prod.id}')" class="flex-1 bg-red-50 text-red-600 py-1.5 rounded-lg text-xs font-bold hover:bg-red-100">Borrar</button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        }
+        function addCategory() {
+            const name = document.getElementById('new-category-name').value.trim();
+            if(!name) return; dbCategories.push({ id: 'c_' + Date.now(), name: name }); document.getElementById('new-category-name').value = ''; renderAdminMenuManager(); renderClientMenu();
+        }
+        function deleteCategory(id) { if(confirm('¿Borrar categoría?')) { dbCategories = dbCategories.filter(c => c.id !== id); renderAdminMenuManager(); renderClientMenu(); } }
+
+        function openProductModal(id = null) {
+            const modal = document.getElementById('product-modal'); const title = document.getElementById('product-modal-title');
+            if(id) {
+                title.textContent = 'Editar'; const prod = dbMenu.find(p => p.id === id);
+                if(prod) { ['prod-id','prod-name','prod-price','prod-img','prod-desc'].forEach(f => document.getElementById(f).value = prod[f.replace('prod-','')] || ''); document.getElementById('prod-category').value = prod.categoryId; }
+            } else {
+                title.textContent = 'Crear'; ['prod-id','prod-name','prod-price','prod-img','prod-desc'].forEach(f => document.getElementById(f).value = '');
+                if(dbCategories.length > 0) document.getElementById('prod-category').value = dbCategories[0].id;
+            }
+            modal.classList.remove('hidden');
+        }
+        function closeProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
+        function saveProduct() {
+            const id = document.getElementById('prod-id').value; const name = document.getElementById('prod-name').value.trim();
+            const price = parseFloat(document.getElementById('prod-price').value); const img = document.getElementById('prod-img').value.trim();
+            const desc = document.getElementById('prod-desc').value.trim(); const catId = document.getElementById('prod-category').value;
+            if(!name || !price || isNaN(price) || !catId) return alert("Faltan datos");
+            if(id) { const i = dbMenu.findIndex(p => p.id === id); if(i > -1) dbMenu[i] = { id, name, price, img, desc, categoryId: catId }; } 
+            else { dbMenu.push({ id: 'p_' + Date.now(), name, price, img, desc, categoryId: catId }); }
+            closeProductModal(); renderAdminMenuManager(); renderClientMenu(); 
+        }
+        function deleteProduct(id) { if(confirm('¿Borrar plato?')) { dbMenu = dbMenu.filter(p => p.id !== id); renderAdminMenuManager(); renderClientMenu(); } }
+
+        function paySubscription() { appState.wompiMode = 'subscription'; document.getElementById('wompi-amount').textContent = `$50.000`; document.getElementById('wompi-modal').classList.remove('hidden'); }
+        function successSubscriptionPayment() { showModal("¡Éxito!", "Mensualidad renovada.", "fa-solid fa-check", "bg-green-100 text-green-600"); document.getElementById('sub-badge').textContent = "Pagado"; appState.wompiMode = 'order'; }
+
+        // Super Admin (SaaS)
+        function renderSuperAdminDashboard() {
+            let active = 0; let susp = 0; const table = document.getElementById('saas-restaurants-table'); table.innerHTML = '';
+            saasRestaurants.forEach(r => {
+                if(r.status === 'active') active++; if(r.status === 'suspended') susp++;
+                const statusBadge = r.status === 'active' 
+                    ? `<span class="text-[10px] font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded">Activo</span>`
+                    : `<span class="text-[10px] font-bold text-red-400 bg-red-400/10 px-2 py-1 rounded">Mora</span>`;
+                const actionBtn = r.status === 'active'
+                    ? `<button onclick="toggleRestStatus('${r.id}', 'suspended')" class="text-xs text-neutral-500 hover:text-red-400">Suspender</button>`
+                    : `<button onclick="toggleRestStatus('${r.id}', 'active')" class="text-xs text-neutral-500 hover:text-green-400">Activar</button>`;
+                table.innerHTML += `<tr class="hover:bg-white/[0.02]">
+                    <td class="px-6 py-4"><p class="font-bold text-white text-sm">${r.name}</p><p class="text-[10px] text-neutral-500">@${r.user}</p></td>
+                    <td class="px-6 py-4 text-xs text-neutral-400">${r.plan}</td><td class="px-6 py-4">${statusBadge}</td><td class="px-6 py-4 text-right">${actionBtn}</td>
+                </tr>`;
+            });
+            document.getElementById('saas-active-count').textContent = active; document.getElementById('saas-suspended-count').textContent = susp;
+        }
+        function toggleRestStatus(id, stat) { const rest = saasRestaurants.find(r => r.id === id); if(rest) { rest.status = stat; renderSuperAdminDashboard(); } }
+
+        // Inicializar
+        renderClientMenu(); updateCartUI();
+    </script>
+</body>
+</html>
